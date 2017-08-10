@@ -1,0 +1,5 @@
+#忽略__pycache__
+__pycache__
+
+＃忽略web
+web
