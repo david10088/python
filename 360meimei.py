@@ -4,18 +4,21 @@ import re
 from lxml import etree
 import random
 import sys
+import os
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 global NUM 
 NUM = 0
+global NUM1 
+NUM1 = 0
 #获取所有需要爬取的美女html页面
 def allurl(url,headers):
     for a in range(2,1608):
         Newurl = url + str(a) + '.html' 
         #print Newurl
         request = urllib2.Request(Newurl, headers=headers)
-        response = urllib2.urlopen(request).read()
+        response = urllib2.urlopen(request,timeout = 180).read()
         pattern = etree.HTML(response)
         link_list = pattern.xpath('//div[@class="post-inner post-hover"]/div[@class="post-thumbnail"]/a/@href')
         for link in link_list:
@@ -26,50 +29,74 @@ def allurl(url,headers):
 #获取所有美女的图片每一个html页面
 def allgirlurl(url,headers):
     request = urllib2.Request(url,headers = headers)
-    response = urllib2.urlopen(request).read()
+    response = urllib2.urlopen(request,timeout = 180).read()
     pattern = etree.HTML(response)
     #print pattern
     img_Link = pattern.xpath('//div[@class="link_pages"]/a[last()-1]/span/text()')
-    #print img_Link
-    for pageNum in img_Link:
-    	if len(pageNum)==1:
-    	    #print img
-	    #print url
-	    #print "-----+++_____"
-	    for N in range(2,int(pageNum)):
-		Newurl = url[:-5] + '_' + str(N) + '.html'
-		print Newurl
-	    	allgirl(Newurl,headers)
-    		#allgirl(url,headers)
-	else:
-	    #continue
-	    print  "单页"
-	    allgirl(url,headers)
+    # print url
+    # return 0
+    count = 1
+    global NUM
+    global NUM1
+    NUM = 0
+    while 1:
+        
+        if(count == 1):
+            url1 = url
+        else:
+            url1 = url[:-5]+'_'+str(count)+'.html'
+        try:
+            request = urllib2.Request(url1,headers = headers)
+            response = urllib2.urlopen(request,timeout=160).read()
+        except urllib2.URLError, e:
+            print NUM1
+            break
+        count = count +1
+        #print url1
+        allgirl(url1,headers)
+    
     #print img_Link
 #获取所有美女的图片url
 def allgirl(url,headers):
     request = urllib2.Request(url,headers = headers)
-    response = urllib2.urlopen(request).read()
+    response = urllib2.urlopen(request,timeout = 180).read()
+    #print response
     pattern = etree.HTML(response)
+    DIRNAME = pattern.xpath('//div[@class="post-inner group"]/h1/text()')
+    #print DIRNAME
+    for ccc in DIRNAME:
+        title = ccc.encode('utf-8')
+        #print DIRNAME
+        #print type(DIRNAME)
+    title = title.strip()#名称
+    path= r'/home/liang/Pictures/360meimei'
+    newfiledir=path+'/'+str(title)#确定新的文件路径，此处根据关键词创建新的文件夹
+    isexist=os.path.exists(newfiledir)# 判断文件夹是否存在
+    if not isexist : # 如果不存在则创建文件路径
+        os.mkdir(newfiledir)
+    
     img_Link = pattern.xpath('//div[@class="entry-inner"]/p/img[@class="lazy lazy-hidden"]/@src')
     #print img_Link
     for aa in  img_Link:
         #saveimg(num,img_name.encode("utf-8"),headers)
-        saveimg(aa,headers)
+        saveimg(aa,headers,newfiledir,title)
 	#print num[-21:-14]
         #print num
+    
 	#pass 
     #print link_list
 
-def saveimg(url,headers):
+def saveimg(url,headers,newfiledir,title):
     request = urllib2.Request(url,headers = headers)
-    response = urllib2.urlopen(request).read()
+    response = urllib2.urlopen(request,timeout = 180).read()
     global NUM
     NUM += 1
-    print NUM
+    global NUM1
+    NUM1 += 1
+    
     #img_name = range(1,30000)
     #print img_name
-    with open('/home/liang/Pictures/360meimei/' +str(NUM) + '.jpg','wb') as f:
+    with open(newfiledir + '/' + title + str(NUM) + '.jpg','wb') as f:
         f.write(response)
 
 
